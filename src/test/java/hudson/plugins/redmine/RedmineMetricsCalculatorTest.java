@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import mockit.NonStrictExpectations;
+import mockit.Expectations;
 
 import org.junit.Test;
 
@@ -21,16 +21,17 @@ public class RedmineMetricsCalculatorTest {
 
   @Test
   public void testCalc() throws MetricsException, RedmineException {
-    new NonStrictExpectations() {
+    new Expectations() {
       RedmineManager redmineManager;
       {
+        minTimes = 0;
+
         redmineManager.getProjects();
         ArrayList<Project> projects = new ArrayList<Project>();
         Project p = new Project();
         p.setId(1);
         p.setName("Example");
         projects.add(p);
-        returns(projects);
 
         redmineManager.getVersions(p.getId());
         ArrayList<Version> versions = new ArrayList<Version>();
@@ -38,7 +39,6 @@ public class RedmineMetricsCalculatorTest {
         v.setId(1);
         v.setName("v1");
         versions.add(v);
-        returns(versions);
 
         Map<String, String> params = new HashMap<String, String>();
         params.put("project_id", p.getId().toString());
@@ -52,7 +52,8 @@ public class RedmineMetricsCalculatorTest {
         issue.setSubject("Hello");
         issue.setStatusName("Open");
         issues.add(issue);
-        returns(issues);
+
+        returns(projects, versions, issues);
       }
     };
 
@@ -63,16 +64,18 @@ public class RedmineMetricsCalculatorTest {
 
   @Test(expected=MetricsException.class)
   public void testNoSuchProject() throws MetricsException, RedmineException {
-    new NonStrictExpectations() {
+    new Expectations() {
       RedmineManager redmineManager;
       {
+        minTimes = 0;
+
         redmineManager.getProjects();
         ArrayList<Project> projects = new ArrayList<Project>();
         Project p = new Project();
         p.setId(1);
         p.setName("Example");
         projects.add(p);
-        returns(projects);
+        result = projects;
       }
     };
 
