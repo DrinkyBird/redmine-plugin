@@ -1,7 +1,10 @@
 package hudson.plugins.redmine;
 
-import org.acegisecurity.GrantedAuthority;
-import org.acegisecurity.userdetails.UserDetails;
+import java.util.Arrays;
+import java.util.Collection;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 public class RedmineUserDetails implements UserDetails {
 
@@ -38,9 +41,10 @@ public class RedmineUserDetails implements UserDetails {
         this.authorities           = authorities;
     }
 
-    public GrantedAuthority[] getAuthorities() {
-        return authorities;
-    }
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Arrays.asList(authorities);
+	}
 
     public String getPassword() {
         return password;

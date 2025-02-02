@@ -15,12 +15,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.acegisecurity.AuthenticationException;
-import org.acegisecurity.GrantedAuthority;
-import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
-import org.acegisecurity.providers.dao.AbstractUserDetailsAuthenticationProvider;
-import org.acegisecurity.userdetails.UserDetails;
-import org.acegisecurity.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.springframework.dao.DataAccessException;
@@ -133,7 +133,7 @@ public class RedmineSecurityRealm extends AbstractPasswordBasedSecurityRealm {
 
         @Override
         protected UserDetails retrieveUser(String username, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
-            return RedmineSecurityRealm.this.authenticate(username, authentication.getCredentials().toString());
+            return RedmineSecurityRealm.this.authenticate2(username, authentication.getCredentials().toString());
         }
     }
 
@@ -143,7 +143,7 @@ public class RedmineSecurityRealm extends AbstractPasswordBasedSecurityRealm {
      * @param password Login Password
      */
     @Override
-    protected UserDetails authenticate(String username, String password) throws AuthenticationException {
+    protected UserDetails authenticate2(String username, String password) throws AuthenticationException {
         AbstractAuthDao dao = null;
 
         try {
@@ -185,7 +185,7 @@ public class RedmineSecurityRealm extends AbstractPasswordBasedSecurityRealm {
                 throw new RedmineAuthenticationException("RedmineSecurity: Invalid Password");
             }
 
-            return getUserDetails(username, userData.getPassword());
+            return getUserDetails2(username, userData.getPassword());
         } catch (AuthenticationException e) {
             throw e;
         } catch (Exception e) {
@@ -196,7 +196,7 @@ public class RedmineSecurityRealm extends AbstractPasswordBasedSecurityRealm {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException, DataAccessException {
+    public UserDetails loadUserByUsername2(String username) throws UsernameNotFoundException, DataAccessException {
         AbstractAuthDao dao = null;
 
         try {
@@ -217,7 +217,7 @@ public class RedmineSecurityRealm extends AbstractPasswordBasedSecurityRealm {
                 throw new UsernameNotFoundException("RedmineSecurity: User not found");
             }
 
-            return getUserDetails(username, userData.getPassword());
+            return getUserDetails2(username, userData.getPassword());
         } catch (AuthenticationException e) {
             throw e;
         } catch (Exception e) {
@@ -252,9 +252,9 @@ public class RedmineSecurityRealm extends AbstractPasswordBasedSecurityRealm {
      * @param password
      * @return
      */
-    private UserDetails getUserDetails(String username, String password) {
+    private UserDetails getUserDetails2(String username, String password) {
         Set<GrantedAuthority> groups = new HashSet<GrantedAuthority>();
-        groups.add(SecurityRealm.AUTHENTICATED_AUTHORITY);
+        groups.add(SecurityRealm.AUTHENTICATED_AUTHORITY2);
         return new RedmineUserDetails(username, password, true, true, true, true, groups.toArray(new GrantedAuthority[groups.size()]));
     }
 
