@@ -14,8 +14,11 @@ import org.junit.Test;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.bean.Issue;
+import com.taskadapter.redmineapi.bean.IssueFactory;
 import com.taskadapter.redmineapi.bean.Project;
+import com.taskadapter.redmineapi.bean.ProjectFactory;
 import com.taskadapter.redmineapi.bean.Version;
+import com.taskadapter.redmineapi.bean.VersionFactory;
 
 public class RedmineMetricsCalculatorTest {
 
@@ -26,17 +29,15 @@ public class RedmineMetricsCalculatorTest {
       {
         minTimes = 0;
 
-        redmineManager.getProjects();
+        redmineManager.getProjectManager().getProjects();
         ArrayList<Project> projects = new ArrayList<Project>();
-        Project p = new Project();
-        p.setId(1);
+        Project p = ProjectFactory.create(1);
         p.setName("Example");
         projects.add(p);
 
-        redmineManager.getVersions(p.getId());
+        redmineManager.getProjectManager().getVersions(p.getId());
         ArrayList<Version> versions = new ArrayList<Version>();
-        Version v = new Version();
-        v.setId(1);
+        Version v = VersionFactory.create(1);
         v.setName("v1");
         versions.add(v);
 
@@ -44,11 +45,10 @@ public class RedmineMetricsCalculatorTest {
         params.put("project_id", p.getId().toString());
         params.put("fixed_version_id", "1");
         params.put("status_id", "*");
-        redmineManager.getIssues(params);
+        redmineManager.getIssueManager().getIssues(params);
         List<Issue> issues = new ArrayList<Issue>();
-        Issue issue = new Issue();
+        Issue issue = IssueFactory.create(1);
         issue.setStatusId(1);
-        issue.setId(1);
         issue.setSubject("Hello");
         issue.setStatusName("Open");
         issues.add(issue);
@@ -69,10 +69,9 @@ public class RedmineMetricsCalculatorTest {
       {
         minTimes = 0;
 
-        redmineManager.getProjects();
+        redmineManager.getProjectManager().getProjects();
         ArrayList<Project> projects = new ArrayList<Project>();
-        Project p = new Project();
-        p.setId(1);
+        Project p = ProjectFactory.create(1);
         p.setName("Example");
         projects.add(p);
         result = projects;

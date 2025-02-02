@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import org.apache.commons.lang.ArrayUtils;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
+import com.taskadapter.redmineapi.RedmineManagerFactory;
 import com.taskadapter.redmineapi.bean.Issue;
 import com.taskadapter.redmineapi.bean.Project;
 import com.taskadapter.redmineapi.bean.Version;
@@ -37,7 +38,7 @@ public class RedmineMetricsCalculator {
   public List<MetricsResult> calc() throws MetricsException {
     List<MetricsResult> result = new ArrayList<MetricsResult>();
     try {
-      RedmineManager manager = new RedmineManager(url, apiKey);
+      RedmineManager manager = RedmineManagerFactory.createWithApiKey(url, apiKey);
       
       Project proj = getProject(manager);
 
@@ -50,7 +51,7 @@ public class RedmineMetricsCalculator {
         params.put("fixed_version_id", v);
         params.put("status_id", "*");
 
-        for (Issue issue : manager.getIssues(params)) {
+        for (Issue issue : manager.getIssueManager().getIssues(params).getResults()) {
           if (!isTargetTracker(issue)) {
             continue;
           }
@@ -92,7 +93,7 @@ public class RedmineMetricsCalculator {
   }
 
   private Project getProject(RedmineManager manager) throws RedmineException {
-    List<Project> projects = manager.getProjects();
+    List<Project> projects = manager.getProjectManager().getProjects();
     for (Project proj : projects) {
       if (projectName.equalsIgnoreCase(proj.getIdentifier())) {
         return proj;
@@ -108,7 +109,7 @@ public class RedmineMetricsCalculator {
 
   private List<String> getVersionsString(RedmineManager manager, Project proj)
       throws RedmineException {
-    List<Version> allVersions = manager.getVersions(proj.getId());
+    List<Version> allVersions = manager.getProjectManager().getVersions(proj.getId());
     if (versions.isEmpty()) {
       return allVersionsWithNull(allVersions);
     }
