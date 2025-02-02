@@ -1,6 +1,7 @@
 package hudson.plugins.redmine.dao;
 
 import hudson.plugins.redmine.RedmineAuthenticationException;
+import hudson.plugins.redmine.RedmineGroupData;
 import hudson.plugins.redmine.RedmineUserData;
 import hudson.plugins.redmine.util.Constants;
 
@@ -8,6 +9,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -145,4 +148,85 @@ public class MySQLAuthDao extends AbstractAuthDao {
         }
     }
 
+    @Override
+	public RedmineGroupData getRedmineGroupData(String loginTable, String field, String name) throws RedmineAuthenticationException {
+    	PreparedStatement state = null;
+        ResultSet results = null;
+
+        try {
+            String query = String.format("SELECT * FROM %s WHERE %s = ? AND type LIKE 'Group%%'", loginTable, field);
+
+            state = conn.prepareStatement(query);
+            state.setString(1, name);
+
+            results = state.executeQuery();
+
+            if (results == null)
+                return null;
+
+            if (results.next()) {
+            	RedmineGroupData userData = new RedmineGroupData();
+                userData.setId(results.getInt("id"));
+                userData.setName(results.getString("lastname"));
+
+                return userData;
+            } else
+                return null;
+        } catch (RedmineAuthenticationException e) {
+            throw e;
+        } catch (SQLException e) {
+            throw new RedmineAuthenticationException("RedmineSecurity: Query Error", e);
+        } catch (Exception e) {
+            throw new RedmineAuthenticationException("RedmineSecurity: Query Error", e);
+        } finally {
+            if (results != null) {
+                try { results.close(); } catch (Exception e) {}
+            }
+            if (state != null) {
+                try { state.close(); } catch (Exception e) {}
+            }
+        }
+	}
+    
+    @Override
+	public RedmineGroupData[] getRedmineUserGroups(String loginTable, String userField, String username)
+			throws RedmineAuthenticationException {
+		PreparedStatement state = null;
+	    ResultSet results = null;
+	    
+	    try {
+	    	String query = String.format("SELECT %s.id, %s.%s, groups_users.* FROM %s, groups_users WHERE users.login = ?", loginTable, loginTable, userField, loginTable);
+
+            state = conn.prepareStatement(query);
+            state.setString(1, username);
+
+            results = state.executeQuery();
+            
+            if (results == null)
+            	return new RedmineGroupData[0];
+            
+            List<RedmineGroupData> groups = new ArrayList<>();
+            while (results.next()) {
+            	RedmineGroupData group = getRedmineGroupData(loginTable, "id", results.getString("groups_users.group_id"));
+            	if (group != null) {
+            		groups.add(group);
+            	}
+            }
+            
+            return groups.toArray(new RedmineGroupData[0]);
+	    } catch (RedmineAuthenticationException e) {
+            throw e;
+        } catch (SQLException e) {
+            throw new RedmineAuthenticationException("RedmineSecurity: Query Error", e);
+        } catch (Exception e) {
+            throw new RedmineAuthenticationException("RedmineSecurity: Query Error", e);
+        } finally {
+            if (results != null) {
+                try { results.close(); } catch (Exception e) {}
+            }
+            if (state != null) {
+                try { state.close(); } catch (Exception e) {}
+            }
+        }
+	}
 }

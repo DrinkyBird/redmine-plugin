@@ -1,6 +1,7 @@
 package hudson.plugins.redmine.dao;
 
 import hudson.plugins.redmine.RedmineAuthenticationException;
+import hudson.plugins.redmine.RedmineGroupData;
 import hudson.plugins.redmine.RedmineUserData;
 
 import java.sql.Connection;
@@ -62,5 +63,9 @@ public abstract class AbstractAuthDao {
      * @throws RedmineAuthenticationException
      */
     public abstract RedmineUserData getRedmineUserData(String loginTable, String userField, String passField, String saltField, String username) throws RedmineAuthenticationException;
+    
+    public abstract RedmineGroupData getRedmineGroupData(String loginTable, String field, String name) throws RedmineAuthenticationException;
+    
+    public abstract RedmineGroupData[] getRedmineUserGroups(String loginTable, String userField, String username) throws RedmineAuthenticationException;
 
 }

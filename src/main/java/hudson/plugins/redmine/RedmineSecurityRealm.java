@@ -17,10 +17,12 @@ import java.util.logging.Logger;
 
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.acegisecurity.GrantedAuthorityImpl;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.springframework.dao.DataAccessException;
@@ -184,8 +186,10 @@ public class RedmineSecurityRealm extends AbstractPasswordBasedSecurityRealm {
                 LOGGER.warning("RedmineSecurity: Invalid Password");
                 throw new RedmineAuthenticationException("RedmineSecurity: Invalid Password");
             }
+            
+            RedmineGroupData[] groups = dao.getRedmineUserGroups(this.loginTable, this.userField, username);
 
-            return getUserDetails2(username, userData.getPassword());
+            return getUserDetails(username, userData.getPassword(), groups);
         } catch (AuthenticationException e) {
             throw e;
         } catch (Exception e) {
@@ -216,8 +220,10 @@ public class RedmineSecurityRealm extends AbstractPasswordBasedSecurityRealm {
                 LOGGER.warning("RedmineSecurity: Invalid Username");
                 throw new UsernameNotFoundException("RedmineSecurity: User not found");
             }
+            
+            RedmineGroupData[] groups = dao.getRedmineUserGroups(this.loginTable, this.userField, username);
 
-            return getUserDetails2(username, userData.getPassword());
+            return getUserDetails(username, userData.getPassword(), groups);
         } catch (AuthenticationException e) {
             throw e;
         } catch (Exception e) {
@@ -243,7 +249,30 @@ public class RedmineSecurityRealm extends AbstractPasswordBasedSecurityRealm {
 
     @Override
     public GroupDetails loadGroupByGroupname(String groupname) throws UsernameNotFoundException, DataAccessException {
-        throw new UsernameNotFoundException("RedmineSecurityRealm: Non-supported function");
+       AbstractAuthDao dao = null;
+       try {
+           dao = createAuthDao(this.dbms);
+
+           dao.open(this.dbServer, this.port, this.databaseName, this.dbUserName, this.dbPassword.getPlainText());
+
+           if (!dao.isTable(this.loginTable))
+               throw new RedmineAuthenticationException("RedmineSecurity: Invalid Login Table");
+           
+           RedmineGroupData groupData = dao.getRedmineGroupData(this.loginTable, "lastname", groupname);
+           
+           if (groupData == null) {
+               LOGGER.warning("RedmineSecurity: Invalid group name");
+               throw new UsernameNotFoundException("RedmineSecurity: Group not found");
+           }
+           
+           return new RedmineGroupDetails(groupData.getName());
+       } catch (AuthenticationException e) {
+           throw e;
+       } catch (Exception e) {
+           throw new RedmineAuthenticationException("RedmineSecurity: System.Exception", e);
+       } finally {
+           if (dao != null) dao.close();
+       }
     }
 
     /**
@@ -252,9 +281,12 @@ public class RedmineSecurityRealm extends AbstractPasswordBasedSecurityRealm {
      * @param password
      * @return
      */
-    private UserDetails getUserDetails2(String username, String password) {
+    private UserDetails getUserDetails(String username, String password, RedmineGroupData[] redmineGroups) {
         Set<GrantedAuthority> groups = new HashSet<GrantedAuthority>();
         groups.add(SecurityRealm.AUTHENTICATED_AUTHORITY2);
+        for (RedmineGroupData group : redmineGroups) {
+        	groups.add(new SimpleGrantedAuthority(group.getName()));
+        }
         return new RedmineUserDetails(username, password, true, true, true, true, groups.toArray(new GrantedAuthority[groups.size()]));
     }
 
