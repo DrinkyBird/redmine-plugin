@@ -195,7 +195,7 @@ public class MySQLAuthDao extends AbstractAuthDao {
 	    ResultSet results = null;
 	    
 	    try {
-	    	String query = String.format("SELECT %s.id, %s.%s, groups_users.* FROM %s, groups_users WHERE users.login = ?", loginTable, loginTable, userField, loginTable);
+	    	String query = String.format("SELECT %s.id, %s.%s, groups_users.* FROM %s, groups_users WHERE users.login = ? AND groups_users.user_id = %s.id", loginTable, loginTable, userField, loginTable, loginTable);
 
             state = conn.prepareStatement(query);
             state.setString(1, username);
